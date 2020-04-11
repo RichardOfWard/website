@@ -22,24 +22,61 @@
 
     initializeCanvasSizing();
 
-    function render({time, delta}) {
+    let screenLetters = [];
+
+    appCanvas.addEventListener("mousemove", (mousemove) => {
+        function absMax(values, max) {
+            return Math.max(Math.min(values, max), -max);
+        }
+
+        screenLetters.push({
+                velocity: {
+                    x: absMax(mousemove.movementX, 14),
+                    y: absMax(mousemove.movementY, 14),
+                },
+                angularVelocity: absMax(mousemove.movementX, 0.06),
+                position: {
+                    x: mousemove.offsetX,
+                    y: mousemove.offsetY,
+                },
+                angle: 0,
+            }
+        )
+    });
+
+    function tick(timeInfo) {
+        const gravity = {
+            x: 0,
+            y: 50,
+        }
+        screenLetters.forEach(screenLetter => {
+            screenLetter.velocity.x += gravity.x * timeInfo.delta;
+            screenLetter.velocity.y += gravity.y * timeInfo.delta;
+            screenLetter.position.x += screenLetter.velocity.x;
+            screenLetter.position.y += screenLetter.velocity.y;
+            screenLetter.angle += screenLetter.angularVelocity;
+        })
+        screenLetters = screenLetters.filter(screenLetter => screenLetter.position.y < appCanvas.height * 1.5);
+    }
+
+
+    function render() {
         context.clearRect(0, 0, appCanvas.width, appCanvas.height);
-        context.save();
 
-        context.arc(0, 0, 5, 0, 2 * Math.PI);
-        context.fillStyle = 'blue';
-        context.fill();
-        // Non-rotated rectangle
-        context.fillStyle = 'gray';
-        context.fillRect(100, 0, 80, 20);
-
-        // Rotated rectangle
-        context.rotate(time * 0.01 * Math.PI / 180);
-        context.fillStyle = 'red';
-        context.fillRect(100, 0, 80, 20);
-
-        // Reset transformation matrix to the identity matrix
-        context.restore();
+        screenLetters.forEach(screenLetter => {
+            context.font = "2em sans-serif";
+            context.save();
+            context.translate(screenLetter.position.x, screenLetter.position.y);
+            context.rotate(screenLetter.angle);
+            const textMetrics = context.measureText('J');
+            const glyphMetrics = {
+                width: textMetrics.actualBoundingBoxLeft + textMetrics.actualBoundingBoxRight,
+                height: textMetrics.actualBoundingBoxAscent + textMetrics.actualBoundingBoxDescent,
+            }
+            context.fillStyle = 'black';
+            context.fillText("J", -glyphMetrics.width / 2, glyphMetrics.height / 2);
+            context.restore();
+        })
     }
 
     function startFrameLoop() {
@@ -49,9 +86,12 @@
 
         function animationFrame(currentTimeStamp) {
             requestAnimationFrame(animationFrame);
-            const time = currentTimeStamp - initialTimeStamp;
-            const delta = currentTimeStamp - lastTimeStamp;
-            render(Object.freeze({time, delta}));
+            const timeInfo = {
+                time: (currentTimeStamp - initialTimeStamp) / 1000,
+                delta: (currentTimeStamp - lastTimeStamp) / 1000,
+            };
+            tick(timeInfo);
+            render();
             lastTimeStamp = currentTimeStamp;
         }
 
@@ -59,5 +99,4 @@
     }
 
     startFrameLoop()
-
 })();
