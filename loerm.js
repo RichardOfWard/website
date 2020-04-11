@@ -8,7 +8,6 @@
         function resizeCanvas() {
             appCanvas.width = Math.max(100, appCanvasContainer.offsetWidth);
             appCanvas.height = Math.max(100, appCanvasContainer.offsetHeight);
-            requestAnimationFrame(renderFrame);
         }
 
         // resize on page load
@@ -18,12 +17,13 @@
         window.addEventListener("resize", resizeCanvas);
 
         // resize periodically to cope with flash of mis-styled content
-        setInterval(resizeCanvas, 5000);
+        setInterval(resizeCanvas, 1000);
     }
 
     initializeCanvasSizing();
 
-    function renderFrame() {
+    function render({time, delta}) {
+        context.clearRect(0, 0, appCanvas.width, appCanvas.height);
         context.save();
 
         context.arc(0, 0, 5, 0, 2 * Math.PI);
@@ -34,7 +34,7 @@
         context.fillRect(100, 0, 80, 20);
 
         // Rotated rectangle
-        context.rotate(45 * Math.PI / 180);
+        context.rotate(time * 0.01 * Math.PI / 180);
         context.fillStyle = 'red';
         context.fillRect(100, 0, 80, 20);
 
@@ -42,5 +42,22 @@
         context.restore();
     }
 
-    renderFrame();
+    function startFrameLoop() {
+        const initialTimeStamp = window.performance.now();
+        let lastTimeStamp = initialTimeStamp;
+
+
+        function animationFrame(currentTimeStamp) {
+            requestAnimationFrame(animationFrame);
+            const time = currentTimeStamp - initialTimeStamp;
+            const delta = currentTimeStamp - lastTimeStamp;
+            render(Object.freeze({time, delta}));
+            lastTimeStamp = currentTimeStamp;
+        }
+
+        animationFrame(initialTimeStamp);
+    }
+
+    startFrameLoop()
+
 })();
