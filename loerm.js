@@ -22,6 +22,40 @@
 
     initializeCanvasSizing();
 
+    appCanvas.addEventListener("mousemove", (mousemove) => {
+        const {movementX, movementY, offsetX, offsetY} = mousemove;
+        return onInputMove({
+            offsetX: offsetX,
+            offsetY: offsetY,
+            movementX: movementX,
+            movementY: movementY,
+        });
+    });
+
+    let previousTouches;
+
+    appCanvas.addEventListener("touchstart", (touchStart) => {
+        resetPreviousTouches(touchStart);
+    });
+
+    appCanvas.addEventListener("touchmove", (touchMove) => {
+        const touch = touchMove.touches[0];
+        const previousTouch = previousTouches[touch.identifier];
+        const offsetX = touch.clientX - appCanvas.offsetLeft;
+        const offsetY = touch.clientY - appCanvas.offsetTop;
+        const movementX = offsetX - (previousTouch.clientX - appCanvas.offsetLeft);
+        const movementY = offsetY - (previousTouch.clientY - appCanvas.offsetTop);
+        onInputMove({offsetX, offsetY, movementX, movementY});
+        resetPreviousTouches(touchMove);
+    });
+
+    function resetPreviousTouches(touchEvent) {
+        previousTouches = {};
+        for (let i = 0; i < touchEvent.touches.length; i++) {
+            previousTouches[touchEvent.touches[i].identifier] = touchEvent.touches[i];
+        }
+    }
+
     let screenLetters = [];
 
     const texts = [
@@ -33,7 +67,7 @@
     let textNumber = 0, characterNumber = 0;
     let lastLetterAdded = window.performance.now() / 1000;
 
-    appCanvas.addEventListener("mousemove", (mousemove) => {
+    function onInputMove({offsetX, offsetY, movementX, movementY}) {
         const now = window.performance.now() / 1000;
         if (now - lastLetterAdded < 0.09) {
             return;
@@ -57,17 +91,17 @@
         screenLetters.push({
             character: character,
             velocity: {
-                x: absMax(mousemove.movementX, 14),
-                y: absMax(mousemove.movementY, 14),
+                x: absMax(movementX, 14),
+                y: absMax(movementY, 14),
             },
-            angularVelocity: absMax(mousemove.movementX / 100, 0.06),
+            angularVelocity: absMax(movementX / 100, 0.06),
             position: {
-                x: mousemove.offsetX,
-                y: mousemove.offsetY,
+                x: offsetX,
+                y: offsetY,
             },
             angle: 0,
         });
-    });
+    }
 
     function tick(timeInfo) {
         const gravity = {
