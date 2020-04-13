@@ -123,6 +123,7 @@
         context.clearRect(0, 0, appCanvas.width, appCanvas.height);
 
         screenLetters.forEach(screenLetter => {
+            let offset;
             context.font = "2em sans-serif";
             context.save();
             context.translate(screenLetter.position.x, screenLetter.position.y);
@@ -133,7 +134,11 @@
                 height: textMetrics.actualBoundingBoxAscent + textMetrics.actualBoundingBoxDescent,
             }
             context.fillStyle = 'black';
-            context.fillText(screenLetter.character, -glyphMetrics.width / 2, glyphMetrics.height / 2);
+            offset = (isNaN(glyphMetrics.height) || isNaN(glyphMetrics.width))
+                // some browsers don't fill th textMetrics correctly, so just make do.
+                ? {x: 0, y: 0}
+                : {x: -glyphMetrics.width / 2, y: glyphMetrics.height / 2};
+            context.fillText(screenLetter.character, offset.x, offset.y);
             context.restore();
         })
     }
