@@ -39,12 +39,13 @@
     });
 
     appCanvas.addEventListener("touchmove", (touchMove) => {
+        const TOUCH_OFFSET = 48; // allow people to see without their thumb/finger in the way
         const touch = touchMove.touches[0];
         const previousTouch = previousTouches[touch.identifier];
-        const offsetX = touch.clientX - appCanvas.offsetLeft;
-        const offsetY = touch.clientY - appCanvas.offsetTop;
-        const movementX = offsetX - (previousTouch.clientX - appCanvas.offsetLeft);
-        const movementY = offsetY - (previousTouch.clientY - appCanvas.offsetTop);
+        const offsetX = touch.clientX - appCanvas.offsetLeft - TOUCH_OFFSET;
+        const offsetY = touch.clientY - appCanvas.offsetTop - TOUCH_OFFSET;
+        const movementX = offsetX - (previousTouch.clientX - appCanvas.offsetLeft - TOUCH_OFFSET);
+        const movementY = offsetY - (previousTouch.clientY - appCanvas.offsetTop - TOUCH_OFFSET);
         onInputMove({offsetX, offsetY, movementX, movementY});
         resetPreviousTouches(touchMove);
     });
