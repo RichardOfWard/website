@@ -91,10 +91,10 @@
         screenLetters.push({
             character: character,
             velocity: {
-                x: absMax(moveInfo.movementX, 14),
-                y: absMax(moveInfo.movementY, 14)
+                x: zeroNan(absMax(moveInfo.movementX, 14)),
+                y: zeroNan(absMax(moveInfo.movementY, 14))
             },
-            angularVelocity: absMax(moveInfo.movementX / 100, 0.06),
+            angularVelocity: zeroNan(absMax(moveInfo.movementX / 100, 0.06)),
             position: {
                 x: moveInfo.offsetX,
                 y: moveInfo.offsetY
@@ -121,11 +121,14 @@
     }
 
 
+    function zeroNan(n) {
+        return isNaN(n) ? 0 : n;
+    }
+
     function render() {
         context.clearRect(0, 0, appCanvas.width, appCanvas.height);
 
         screenLetters.forEach(function (screenLetter) {
-            var offset;
             context.font = "2em sans-serif";
             context.save();
             context.translate(screenLetter.position.x, screenLetter.position.y);
@@ -136,11 +139,7 @@
                 height: textMetrics.actualBoundingBoxAscent + textMetrics.actualBoundingBoxDescent
             }
             context.fillStyle = 'black';
-            offset = (isNaN(glyphMetrics.height) || isNaN(glyphMetrics.width))
-                // some browsers don't fill th textMetrics correctly, so just make do.
-                ? {x: 0, y: 0}
-                : {x: -glyphMetrics.width / 2, y: glyphMetrics.height / 2};
-            context.fillText(screenLetter.character, offset.x, offset.y);
+            context.fillText(screenLetter.character, zeroNan(-glyphMetrics.width), zeroNan(glyphMetrics.height));
             context.restore();
         })
     }
